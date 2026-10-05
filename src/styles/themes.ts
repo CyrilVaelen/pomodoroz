@@ -34,6 +34,9 @@ export const lightTheme = css`
   --color-bg-input-focus: var(--color-bg-primary);
 
   --color-primary-button: var(--color-bg-primary);
+  --color-primary-text: var(--color-primary);
+  --color-primary-border: var(--color-primary);
+  --color-primary-focus: var(--color-primary);
   --color-bg-button-normal: var(--color-bg-primary);
 
   --color-bg-task-list: var(--color-bg-tertiary);
@@ -91,6 +94,9 @@ export const darkTheme = css`
   --color-bg-input-focus: #2a363e;
 
   --color-primary-button: #fff;
+  --color-primary-text: var(--color-primary);
+  --color-primary-border: var(--color-primary);
+  --color-primary-focus: var(--color-primary);
   --color-bg-button-normal: #2a363e;
 
   --color-bg-task-list: var(--color-bg-secondary);

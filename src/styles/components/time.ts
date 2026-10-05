@@ -39,12 +39,12 @@ export const StyledTimeInput = styled.input<{ error?: boolean }>`
   }
 
   &:focus {
-    border-color: var(--color-primary);
+    border-color: var(--color-primary-border);
     box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.16);
   }
 
   &:focus ~ label {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 
   ${(p) =>

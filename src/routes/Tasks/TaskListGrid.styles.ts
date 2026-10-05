@@ -54,8 +54,10 @@ export const StyledGridToolbarButton = styled.button<{
 
   &:hover {
     color: ${(p) =>
-      p.$active ? "var(--color-bg-primary)" : "var(--color-primary)"};
-    border-color: var(--color-primary);
+      p.$active
+        ? "var(--color-primary-button)"
+        : "var(--color-primary-text)"};
+    border-color: var(--color-primary-border);
   }
 
   &:disabled {
@@ -196,7 +198,7 @@ export const StyledGridCard = styled.button<{
     ${(p) =>
       p.$active &&
       css`
-        border-color: var(--color-primary);
+        border-color: var(--color-primary-border);
       `}
   }
 `;
@@ -367,7 +369,7 @@ export const StyledGridColumnsSelect = styled.select`
   }
 
   &:hover {
-    border-color: var(--color-primary);
+    border-color: var(--color-primary-border);
   }
 `;
 

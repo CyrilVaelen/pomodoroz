@@ -31,6 +31,7 @@ import { isFreshInstallProfile, setEnableInAppAutoUpdate } from "store";
 import { setUpdateVersion } from "store/update";
 import {
   getFromStorage,
+  isTauri,
   saveToStorage,
   shortcutMatchesEvent,
 } from "utils";
@@ -183,6 +184,10 @@ const Layout: React.FC<Props> = ({ children }) => {
   ]);
 
   useEffect(() => {
+    if (!isTauri()) {
+      return;
+    }
+
     const hasSeenPrompt =
       getFromStorage<boolean>(AUTO_UPDATE_POLICY_PROMPT_SEEN_KEY) ===
       true;
@@ -223,7 +228,11 @@ const Layout: React.FC<Props> = ({ children }) => {
     getInvokeConnector().send(INSTALL_UPDATE);
   }, [clearUpdatePromptForSession]);
 
+  const shouldShowFirstRunAutoUpdatePrompt =
+    isTauri() && showFirstRunAutoUpdatePrompt;
+
   const shouldShowUpdateInstallPrompt =
+    isTauri() &&
     Boolean(update.updateVersion) &&
     !settings.enableInAppAutoUpdate &&
     !showFirstRunAutoUpdatePrompt &&
@@ -247,7 +256,7 @@ const Layout: React.FC<Props> = ({ children }) => {
           onClose={dismissConnectorError}
         />
       )}
-      {showFirstRunAutoUpdatePrompt && (
+      {shouldShowFirstRunAutoUpdatePrompt && (
         <Portal id="portal">
           <FirstRunAutoUpdateOverlay
             role="dialog"

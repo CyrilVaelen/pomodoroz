@@ -153,11 +153,11 @@ const StyledTaskClickable = styled.button`
   text-align: left;
 
   &:hover > span:first-child {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 
   &:hover > span:last-child {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 
   &:disabled {
@@ -208,7 +208,7 @@ const StyledTaskButton = styled.button`
   transition: ${themes.transition};
 
   &:hover {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 
   &:disabled {
@@ -309,7 +309,7 @@ const StyledActionsMenuItem = styled.button<{
       if (p.variant === "delete") {
         return "var(--color-pink)";
       }
-      return "var(--color-primary)";
+      return "var(--color-primary-text)";
     }};
   }
 `;
@@ -470,8 +470,8 @@ const StyledPromptButton = styled.button`
 
   &:hover {
     background-color: var(--color-primary);
-    color: var(--color-bg-primary);
-    border-color: var(--color-primary);
+    color: var(--color-primary-button);
+    border-color: var(--color-primary-border);
   }
 `;
 

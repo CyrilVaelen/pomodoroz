@@ -11,6 +11,7 @@ export const enum TimerStatus {
   SHORT_BREAK = "SHORT_BREAK",
   LONG_BREAK = "LONG_BREAK",
   SPECIAL_BREAK = "SPECIAL_BREAK",
+  COUNT_UP = "COUNT_UP",
 }
 
 export type TimerPayload<T extends keyof TimerTypes> = PayloadAction<

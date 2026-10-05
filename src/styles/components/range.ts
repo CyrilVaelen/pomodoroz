@@ -66,7 +66,7 @@ export const StyledRangeSlider = styled.input`
     height: 1.2rem;
 
     border-radius: 10rem;
-    border: 1px solid var(--color-primary);
+    border: 1px solid var(--color-primary-border);
     background-color: var(--color-bg-slider-thumb);
 
     box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb), 0.16);

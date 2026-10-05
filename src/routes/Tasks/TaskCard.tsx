@@ -158,6 +158,20 @@ const TaskCard: React.FC<Props> = ({
   return (
     <StyledCard
       ref={setNodeRef}
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          if (!editing) {
+            event.preventDefault();
+            onClick?.(
+              event as unknown as React.MouseEvent<
+                HTMLDivElement,
+                MouseEvent
+              >
+            );
+          }
+        }
+      }}
       style={{
         transform: CSS.Transform.toString(transform),
         transition,

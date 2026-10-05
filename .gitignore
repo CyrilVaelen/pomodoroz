@@ -10,10 +10,13 @@
 /artifacts/
 
 .DS_Store
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+!.env.example
+scratch/
 
 npm-debug.log*
 yarn-debug.log*

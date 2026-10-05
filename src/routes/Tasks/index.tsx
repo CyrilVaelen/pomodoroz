@@ -1,4 +1,9 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useAppDispatch, useAppSelector } from "hooks";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
@@ -28,20 +33,23 @@ import {
   redoTasks,
   setTaskListPriority,
   setTaskSelection,
+  setTaskCardDone,
+  setTaskCardNotDone,
+  toggleTaskDateCompletion,
   undoTasks,
 } from "store";
 import { getFromStorage, saveToStorage } from "utils";
-import {
-  StyledViewToggle,
-  StyledViewToggleButton,
-} from "./TaskListGrid.styles";
+import TasksHeaderBar, { type TasksViewMode } from "./TasksHeaderBar";
+import TaskMatrixView from "./TaskMatrixView";
+import TaskQuadrantView from "./TaskQuadrantView";
+import UndatedTasksDrawer from "./UndatedTasksDrawer";
+import TaskDetails from "./TaskDetails";
+import { getTodayDateKey, getUndatedTasks } from "./matrixUtils";
 
 import TaskFormButton from "./TaskFormButton";
 import TaskCardDragOverlay from "./TaskCardDragOverlay";
 import TaskInnerList from "./TaskInnerList";
-import TaskListGrid from "./TaskListGrid";
 
-type ViewMode = "list" | "grid";
 const TASKS_VIEW_MODE_STORAGE_KEY = "tasks-view-mode";
 type TimerNavigationState = {
   selectedTask?: {
@@ -68,13 +76,18 @@ type ActiveDragCardPreview = {
   width?: number;
 };
 
-const getInitialViewMode = (): ViewMode => {
+const getInitialViewMode = (): TasksViewMode => {
   const savedViewMode = getFromStorage<string>(
     TASKS_VIEW_MODE_STORAGE_KEY
   );
-  return savedViewMode === "grid" || savedViewMode === "list"
-    ? savedViewMode
-    : "list";
+  if (
+    savedViewMode === "matrix" ||
+    savedViewMode === "quadrant" ||
+    savedViewMode === "list"
+  ) {
+    return savedViewMode;
+  }
+  return "matrix";
 };
 
 export default function Tasks() {
@@ -84,9 +97,53 @@ export default function Tasks() {
 
   const dispatch = useAppDispatch();
   const [viewMode, setViewMode] =
-    useState<ViewMode>(getInitialViewMode);
+    useState<TasksViewMode>(getInitialViewMode);
+  const [selectedDate, setSelectedDate] =
+    useState<string>(getTodayDateKey);
+  const [isUndatedOpen, setIsUndatedOpen] = useState(false);
+  const [activeDetailCard, setActiveDetailCard] = useState<{
+    listId: string;
+    cardId: string;
+  } | null>(null);
+
   const [activeDragCardPreview, setActiveDragCardPreview] =
     useState<ActiveDragCardPreview | null>(null);
+
+  const undatedTasksCount = useMemo(() => {
+    return getUndatedTasks(tasks.present).length;
+  }, [tasks.present]);
+
+  const handleToggleDateDone = useCallback(
+    (
+      listId: string,
+      cardId: string,
+      dateKey: string,
+      done: boolean
+    ) => {
+      dispatch(
+        toggleTaskDateCompletion({ listId, cardId, dateKey, done })
+      );
+    },
+    [dispatch]
+  );
+
+  const handleToggleUndatedDone = useCallback(
+    (listId: string, cardId: string, done: boolean) => {
+      if (done) {
+        dispatch(setTaskCardDone({ listId, cardId }));
+      } else {
+        dispatch(setTaskCardNotDone({ listId, cardId }));
+      }
+    },
+    [dispatch]
+  );
+
+  const handleOpenCardDetail = useCallback(
+    (listId: string, cardId: string) => {
+      setActiveDetailCard({ listId, cardId });
+    },
+    []
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -98,9 +155,7 @@ export default function Tasks() {
 
   const onDragStart = ({ active }: DragStartEvent) => {
     const activeData = active.data.current as
-      | DragListData
-      | DragCardData
-      | undefined;
+      DragListData | DragCardData | undefined;
 
     if (!activeData || activeData.type !== "card") {
       setActiveDragCardPreview(null);
@@ -164,15 +219,10 @@ export default function Tasks() {
     }
 
     const activeData = active.data.current as
-      | DragListData
-      | DragCardData
-      | undefined;
+      DragListData | DragCardData | undefined;
 
     const overData = over.data.current as
-      | DragListData
-      | DragCardData
-      | DragCardContainerData
-      | undefined;
+      DragListData | DragCardData | DragCardContainerData | undefined;
 
     if (!activeData || !overData) {
       return;
@@ -308,78 +358,93 @@ export default function Tasks() {
       document.removeEventListener("keydown", registerUndoRedoKeys);
   }, [dispatch, tasks.past.length, tasks.future.length]);
 
-  if (viewMode === "grid") {
-    return (
-      <StyledTaskMain>
-        <StyledViewToggle>
-          <StyledViewToggleButton
-            $active={false}
-            onClick={() => setViewMode("list")}
-          >
-            {"☰ "}
-            {t("tasks.viewList")}
-          </StyledViewToggleButton>
-          <StyledViewToggleButton $active>
-            {"▦ "}
-            {t("tasks.viewGrid")}
-          </StyledViewToggleButton>
-        </StyledViewToggle>
-        <TaskListGrid onSelectList={handleGridSelect} />
-      </StyledTaskMain>
-    );
-  }
-
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={onDragStart}
-      onDragCancel={() => setActiveDragCardPreview(null)}
-      onDragEnd={onDragEnd}
-    >
-      <StyledTaskMain>
-        <StyledViewToggle>
-          <StyledViewToggleButton $active>
-            {"☰ "}
-            {t("tasks.viewList")}
-          </StyledViewToggleButton>
-          <StyledViewToggleButton
-            $active={false}
-            onClick={() => setViewMode("grid")}
-          >
-            {"▦ "}
-            {t("tasks.viewGrid")}
-          </StyledViewToggleButton>
-        </StyledViewToggle>
-        <StyledTaskContainer>
-          <SortableContext
-            items={tasks.present.map((task) => `list:${task._id}`)}
-            strategy={verticalListSortingStrategy}
-          >
-            <StyledTaskWrapper>
-              <TaskInnerList
-                tasks={tasks.present}
-                onCardContextMenu={(listId, cardId) =>
-                  handleGridSelect(listId, cardId)
-                }
-              />
+    <StyledTaskMain>
+      <TasksHeaderBar
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        selectedDate={selectedDate}
+        onSelectDate={setSelectedDate}
+        undatedCount={undatedTasksCount}
+        onOpenUndated={() => setIsUndatedOpen(true)}
+        onAddList={onListAdd}
+      />
 
-              <StyledTaskStickySection>
-                <TaskFormButton forList onSubmit={onListAdd} />
-              </StyledTaskStickySection>
-            </StyledTaskWrapper>
-          </SortableContext>
-        </StyledTaskContainer>
-      </StyledTaskMain>
-      <DragOverlay>
-        {activeDragCardPreview ? (
-          <TaskCardDragOverlay
-            text={activeDragCardPreview.text}
-            done={activeDragCardPreview.done}
-            width={activeDragCardPreview.width}
-          />
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+      {viewMode === "matrix" && (
+        <TaskMatrixView
+          taskLists={tasks.present}
+          selectedDate={selectedDate}
+          onToggleTaskDone={handleToggleDateDone}
+          onCardClick={handleOpenCardDetail}
+          onSelectForTimer={handleGridSelect}
+        />
+      )}
+
+      {viewMode === "quadrant" && (
+        <TaskQuadrantView
+          taskLists={tasks.present}
+          selectedDate={selectedDate}
+          onToggleTaskDone={handleToggleDateDone}
+          onCardClick={handleOpenCardDetail}
+          onSelectForTimer={handleGridSelect}
+        />
+      )}
+
+      {viewMode === "list" && (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={onDragStart}
+          onDragCancel={() => setActiveDragCardPreview(null)}
+          onDragEnd={onDragEnd}
+        >
+          <StyledTaskContainer>
+            <SortableContext
+              items={tasks.present.map((task) => `list:${task._id}`)}
+              strategy={verticalListSortingStrategy}
+            >
+              <StyledTaskWrapper>
+                <TaskInnerList
+                  tasks={tasks.present}
+                  onCardContextMenu={(listId, cardId) =>
+                    handleGridSelect(listId, cardId)
+                  }
+                />
+
+                <StyledTaskStickySection>
+                  <TaskFormButton forList onSubmit={onListAdd} />
+                </StyledTaskStickySection>
+              </StyledTaskWrapper>
+            </SortableContext>
+          </StyledTaskContainer>
+          <DragOverlay>
+            {activeDragCardPreview ? (
+              <TaskCardDragOverlay
+                text={activeDragCardPreview.text}
+                done={activeDragCardPreview.done}
+                width={activeDragCardPreview.width}
+              />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      )}
+
+      <UndatedTasksDrawer
+        isOpen={isUndatedOpen}
+        taskLists={tasks.present}
+        onClose={() => setIsUndatedOpen(false)}
+        onToggleUndatedDone={handleToggleUndatedDone}
+        onCardClick={handleOpenCardDetail}
+        onSelectForTimer={handleGridSelect}
+      />
+
+      {activeDetailCard && (
+        <TaskDetails
+          listId={activeDetailCard.listId}
+          cardId={activeDetailCard.cardId}
+          onExit={() => setActiveDetailCard(null)}
+        />
+      )}
+    </StyledTaskMain>
   );
 }

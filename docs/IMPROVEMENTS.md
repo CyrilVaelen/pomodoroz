@@ -1,5 +1,7 @@
 # Corrections Roadmap — Pomodoroz
 
+> 上游路线图参考，冻结保留，不作为本地「规划工作台」任务清单。旧版本、OpenSpec 流程及历史状态不代表本机结果。本地长期方向见 `../PROJECT.md`，唯一当前任务见 `../TASK.md`，执行结果见 `../STATUS.md`；仅涉及对应模块时按需参考下文。
+
 > Single source of truth for open corrections and operational hardening.
 >
 > Implemented work belongs in `CHANGELOG.md` / `CHANGELOG.pt.md`. Historical
@@ -36,10 +38,10 @@ sections are `TBD` / `A definir`.
 
 ### P2 — Cross-Platform and Operational Reliability
 
-| ID  | Correction                                                        | Status | Next action                                    |
-| --- | ----------------------------------------------------------------- | ------ | ---------------------------------------------- |
-| C11 | Add macOS CI coverage and verify declared Rust MSRV               | Open   | Create a CI compatibility OpenSpec change.     |
-| C13 | Keep `RETOMADA.md`, `VERSIONS.md`, and release references current | Open   | Update with every completed operational phase. |
+| ID  | Correction                                           | Status | Next action                                                        |
+| --- | ---------------------------------------------------- | ------ | ------------------------------------------------------------------ |
+| C11 | Add macOS CI coverage and verify declared Rust MSRV  | Open   | Create a CI compatibility OpenSpec change.                         |
+| C13 | Keep upstream version and release references current | Open   | Upstream item; local handoff is maintained only in `../STATUS.md`. |
 
 ### P3 — Regression Prevention and Maintenance
 
@@ -81,6 +83,6 @@ are not approved implementation work and must be reprioritized explicitly.
   operational changes.
 - `docs/RELEASE_OPERATIONS.md` and `docs/VERSIONS.md`: current release and
   version operations.
-- `RETOMADA.md`: current-session handoff only.
+- `../STATUS.md`: local current-task handoff; retired upstream RETOMADA history remains in Git.
 - `docs/decisions/ADR-0001-correction-first-roadmap.md`: rationale for this
   correction-first structure.

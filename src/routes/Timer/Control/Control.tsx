@@ -38,6 +38,8 @@ import Sessions from "./Sessions";
 import SkipButton from "./SkipButton";
 import StatisticsButton from "./StatisticsButton";
 import VolumeButton from "./VolumeButton";
+import SaveSessionButton from "./SaveSessionButton";
+import { CounterContext } from "contexts";
 
 type Props = {
   resetTimerAction: (options?: {
@@ -69,6 +71,7 @@ const Control: React.FC<Props> = ({
   const settings = useAppSelector((state) => state.settings);
 
   const dispatch = useAppDispatch();
+  const { finishAndSaveSession } = React.useContext(CounterContext);
 
   const [warn, setWarn] = useState(false);
   const [resetPromptStep, setResetPromptStep] =
@@ -164,22 +167,11 @@ const Control: React.FC<Props> = ({
       return;
     }
 
-    if (
-      !timer.playing &&
-      timer.timerType === TimerStatus.STAY_FOCUS &&
-      !hasActiveTaskSelection
-    ) {
-      activateWarning();
-      return;
-    }
-
     dispatch(setPlay(!timer.playing));
   }, [
     dispatch,
     activateWarning,
-    hasActiveTaskSelection,
     timer.playing,
-    timer.timerType,
     settings.enableStrictMode,
   ]);
 
@@ -326,7 +318,17 @@ const Control: React.FC<Props> = ({
               playing={timer.playing}
               onClick={onPlayCallback}
             />
-            <SkipButton className="compact" onClick={onSkipAction} />
+            {(timer.timerType === TimerStatus.STAY_FOCUS ||
+              timer.timerType === TimerStatus.COUNT_UP) && (
+              <SaveSessionButton
+                className="compact"
+                onClick={finishAndSaveSession}
+                title={t("tasks.save")}
+              />
+            )}
+            {timer.timerType !== TimerStatus.COUNT_UP && (
+              <SkipButton className="compact" onClick={onSkipAction} />
+            )}
           </StyledControlMain>
           <StyledControlSpacer />
           <StyledControlMain compact={settings.compactMode}>
@@ -388,7 +390,16 @@ const Control: React.FC<Props> = ({
             playing={timer.playing}
             onClick={onPlayCallback}
           />
-          <SkipButton onClick={onSkipAction} />
+          {(timer.timerType === TimerStatus.STAY_FOCUS ||
+            timer.timerType === TimerStatus.COUNT_UP) && (
+            <SaveSessionButton
+              onClick={finishAndSaveSession}
+              title={t("tasks.save")}
+            />
+          )}
+          {timer.timerType !== TimerStatus.COUNT_UP && (
+            <SkipButton onClick={onSkipAction} />
+          )}
           <VolumeButton
             soundOn={settings.notificationSoundOn}
             onClick={onNotifacationSoundCallback}

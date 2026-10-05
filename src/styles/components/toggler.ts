@@ -71,7 +71,7 @@ export const StyledTogglerSwitch = styled.input`
     height: 1.4rem;
 
     border-radius: 10rem;
-    border: 0.1rem solid var(--color-primary);
+    border: 0.1rem solid var(--color-primary-border);
     background-color: var(--color-bg-slider-thumb);
     box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb), 0.16);
 

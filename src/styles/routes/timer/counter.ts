@@ -24,7 +24,7 @@ export const StyledCounterProgress = styled(
       (p.type === TimerStatus.SHORT_BREAK && "var(--color-green)") ||
       (p.type === TimerStatus.LONG_BREAK && "var(--color-yellow)") ||
       (p.type === TimerStatus.SPECIAL_BREAK && "var(--color-yellow)") ||
-      "var(--color-primary)"};
+      "var(--color-primary-border)"};
     stroke-width: 0.6rem;
     stroke-linecap: round;
     stroke-dasharray: 674px;
@@ -150,16 +150,24 @@ export const StyledCounterType = styled.div`
 type TimerProps = {
   type?: TimerStatus;
   hours: string;
+  $hidden?: boolean;
 } & CounterContainerProps;
 
 export const StyledCounterTimer = styled.h3<TimerProps>`
   font-size: 4rem;
   font-weight: 400;
+  min-height: 1.2em;
   color: ${(p) =>
     (p.type === TimerStatus.SHORT_BREAK && "var(--color-green)") ||
     (p.type === TimerStatus.LONG_BREAK && "var(--color-yellow)") ||
     (p.type === TimerStatus.SPECIAL_BREAK && "var(--color-yellow)") ||
-    "var(--color-primary)"};
+    "var(--color-primary-text)"};
+
+  ${(p) =>
+    p.$hidden &&
+    css`
+      visibility: hidden;
+    `}
 
   line-height: 1.2;
 

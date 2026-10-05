@@ -22,7 +22,7 @@ export const StyledCollapseHeading = styled.h4<{ open?: boolean }>`
   background-color: transparent;
 
   &:focus {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 
   & > svg {

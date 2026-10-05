@@ -26,17 +26,14 @@ export type SettingTypes = {
   openAtLogin: boolean;
   enableInAppAutoUpdate: boolean;
   language: LanguageOption;
+  hideCountUpElapsedTime: boolean;
+  themePreset: string;
+  customPrimaryColor: string | null;
   shortcuts: ShortcutSettings;
 };
 
 export type LanguageCode =
-  | "en"
-  | "es"
-  | "zh"
-  | "ja"
-  | "pt"
-  | "de"
-  | "fr";
+  "en" | "es" | "zh" | "ja" | "pt" | "de" | "fr";
 
 export type LanguageOption = "auto" | LanguageCode;
 

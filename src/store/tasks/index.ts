@@ -43,6 +43,20 @@ const initialState: TaskList[] = tasks.map((list) => ({
     prioritized: Boolean(card.prioritized),
     dayColor: normalizeDayColor(card.dayColor),
     dayColorDate: card.dayColorDate ?? null,
+    importance:
+      typeof card.importance === "number" &&
+      card.importance >= 1 &&
+      card.importance <= 5
+        ? Math.round(card.importance)
+        : 3,
+    urgency:
+      typeof card.urgency === "number" &&
+      card.urgency >= 1 &&
+      card.urgency <= 5
+        ? Math.round(card.urgency)
+        : 3,
+    schedule: card.schedule ?? null,
+    completedDates: card.completedDates ?? {},
   })),
 }));
 
@@ -451,6 +465,86 @@ const tasksSlice = createSlice({
 
       return ensureSinglePriority(merged);
     },
+
+    setTaskRating: (
+      state,
+      action: PayloadAction<{
+        listId: TaskList["_id"];
+        cardId: Task["_id"];
+        importance: number;
+        urgency: number;
+      }>
+    ) => {
+      const clampedImp = Math.max(
+        1,
+        Math.min(5, Math.round(action.payload.importance))
+      );
+      const clampedUrg = Math.max(
+        1,
+        Math.min(5, Math.round(action.payload.urgency))
+      );
+      return state.map((list) => {
+        if (list._id !== action.payload.listId) return list;
+        const newCards = list.cards.map((card) => {
+          if (card._id !== action.payload.cardId) return card;
+          return editTask(card, {
+            importance: clampedImp,
+            urgency: clampedUrg,
+          });
+        });
+        return { ...list, cards: newCards };
+      });
+    },
+
+    setTaskSchedule: (
+      state,
+      action: PayloadAction<{
+        listId: TaskList["_id"];
+        cardId: Task["_id"];
+        schedule: Task["schedule"];
+      }>
+    ) => {
+      return state.map((list) => {
+        if (list._id !== action.payload.listId) return list;
+        const newCards = list.cards.map((card) => {
+          if (card._id !== action.payload.cardId) return card;
+          return editTask(card, {
+            schedule: action.payload.schedule,
+          });
+        });
+        return { ...list, cards: newCards };
+      });
+    },
+
+    toggleTaskDateCompletion: (
+      state,
+      action: PayloadAction<{
+        listId: TaskList["_id"];
+        cardId: Task["_id"];
+        dateKey: string;
+        done: boolean;
+      }>
+    ) => {
+      const { listId, cardId, dateKey, done } = action.payload;
+      return state.map((list) => {
+        if (list._id !== listId) return list;
+        const newCards = list.cards.map((card) => {
+          if (card._id !== cardId) return card;
+          const currentCompletedDates = {
+            ...(card.completedDates || {}),
+          };
+          if (done) {
+            currentCompletedDates[dateKey] = true;
+          } else {
+            delete currentCompletedDates[dateKey];
+          }
+          return editTask(card, {
+            completedDates: currentCompletedDates,
+          });
+        });
+        return { ...list, cards: newCards };
+      });
+    },
   },
 });
 
@@ -471,9 +565,14 @@ export const {
   setTaskCardNotDone,
   setTaskCardPriority,
   setTaskListPriority,
+  setTaskRating,
+  setTaskSchedule,
+  toggleTaskDateCompletion,
   skipTaskCard,
   appendTaskLists,
 } = tasksSlice.actions;
+
+export const setTaskLists = replaceTaskLists;
 
 export type TasksState = {
   past: TaskList[][];

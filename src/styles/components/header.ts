@@ -36,6 +36,6 @@ export const StyledHeaderButton = styled.button<HeaderButtonTypes>`
 
   &:hover,
   &:focus {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 `;

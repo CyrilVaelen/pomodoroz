@@ -71,19 +71,26 @@ export const StyledCheckbox = styled.label<{
 
   & > input:checked + ${StyledCheckboxBox} {
     border-color: ${(p) =>
-      p.$asPrimary ? "var(--color-primary)" : "var(--color-green)"};
+      p.$asPrimary
+        ? "var(--color-primary-border)"
+        : "var(--color-green)"};
     background-color: ${(p) =>
       p.$asPrimary ? "var(--color-primary)" : "var(--color-green)"};
   }
 
   & > input:checked + ${StyledCheckboxBox}::after {
-    border-color: var(--color-bg-primary);
+    border-color: ${(p) =>
+      p.$asPrimary
+        ? "var(--color-primary-button)"
+        : "var(--color-bg-primary)"};
     transform: rotate(-45deg) scale(1);
   }
 
   & > input:checked ~ ${StyledCheckboxLabel} {
     color: ${(p) =>
-      p.$asPrimary ? "var(--color-primary)" : "var(--color-green)"};
+      p.$asPrimary
+        ? "var(--color-primary-text)"
+        : "var(--color-green)"};
   }
 
   &:hover ${StyledCheckboxBox} {

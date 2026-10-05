@@ -170,6 +170,11 @@ export const StyledCard = styled.div<CardProps>`
       color: var(--color-body-text);
     }
   }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary-focus);
+    outline-offset: 2px;
+  }
 `;
 
 export const StyledCardWrapper = styled.div``;

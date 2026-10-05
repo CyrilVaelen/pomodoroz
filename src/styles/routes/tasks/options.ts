@@ -55,7 +55,7 @@ export const StyledOptionList = styled.ul`
 
 export const StyledOptionReorder = styled.li`
   &:hover {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 `;
 

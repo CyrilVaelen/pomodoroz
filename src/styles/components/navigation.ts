@@ -8,6 +8,7 @@ export const StyledNav = styled.nav<{ useNativeTitlebar: boolean }>`
   height: ${({ useNativeTitlebar }) =>
     useNativeTitlebar ? "5.6rem" : "4.8rem"};
   position: relative;
+  flex-shrink: 0;
 
   &::before {
     content: "";
@@ -35,6 +36,11 @@ export const StyledNavList = styled.ul`
   display: flex;
   align-items: center;
   justify-content: space-around;
+
+  @media (max-width: 480px) {
+    font-size: 1.1rem;
+    padding: 0 0.4rem;
+  }
 `;
 
 export const StyledNavListItem = styled.li`
@@ -77,7 +83,7 @@ export const StyledNavLink = styled(NavLink)<NavLinkProps>`
   transition: ${themes.transition};
 
   &:hover {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 
   &.active {
@@ -91,7 +97,7 @@ export const StyledNavLink = styled(NavLink)<NavLinkProps>`
       (p.$timerType === TimerStatus.SPECIAL_BREAK &&
         p.$isTimerRoute &&
         "var(--color-yellow)") ||
-      "var(--color-primary)"};
+      "var(--color-primary-text)"};
 
     &::after {
       background-color: currentColor;

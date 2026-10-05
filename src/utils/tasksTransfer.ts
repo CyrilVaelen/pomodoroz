@@ -1,13 +1,17 @@
 import { v4 as uuid } from "uuid";
-import type { TaskList } from "store/tasks/types";
+import type { TaskList, TaskSchedule } from "store/tasks/types";
 
-export const TASKS_TRANSFER_VERSION = 2;
+export const TASKS_TRANSFER_VERSION = 3;
 
 type TransferTaskCard = {
   text: string;
   description: string;
   done: boolean;
   prioritized: boolean;
+  importance?: number;
+  urgency?: number;
+  schedule?: TaskSchedule | null;
+  completedDates?: Record<string, boolean>;
 };
 
 type TransferTaskList = {
@@ -56,6 +60,80 @@ const normalizePriority = (lists: TaskList[]): TaskList[] => {
   }));
 };
 
+const parseTransferSchedule = (val: unknown): TaskSchedule | null => {
+  if (!isRecord(val) || typeof val.type !== "string") {
+    return null;
+  }
+
+  if (val.type === "weekly") {
+    if (
+      !Array.isArray(val.selectedWeeks) ||
+      !Array.isArray(val.daysOfWeek)
+    ) {
+      return null;
+    }
+    const selectedWeeks = val.selectedWeeks.filter(
+      (w): w is string => typeof w === "string" && Boolean(w.trim())
+    );
+    const daysOfWeek = val.daysOfWeek
+      .filter(
+        (d): d is number => typeof d === "number" && d >= 1 && d <= 7
+      )
+      .map((d) => Math.round(d));
+    return {
+      type: "weekly",
+      selectedWeeks: Array.from(new Set(selectedWeeks)),
+      daysOfWeek: Array.from(new Set(daysOfWeek)).sort((a, b) => a - b),
+    };
+  }
+
+  if (val.type === "monthly") {
+    if (!Array.isArray(val.selectedDates)) {
+      return null;
+    }
+    const selectedDates = val.selectedDates.filter(
+      (d): d is string => typeof d === "string" && Boolean(d.trim())
+    );
+    return {
+      type: "monthly",
+      selectedDates: Array.from(new Set(selectedDates)).sort(),
+    };
+  }
+
+  if (val.type === "daily") {
+    if (typeof val.startDate !== "string" || !val.startDate.trim()) {
+      return null;
+    }
+    const daysCount =
+      typeof val.daysCount === "number" &&
+      Number.isFinite(val.daysCount)
+        ? Math.max(1, Math.round(val.daysCount))
+        : 1;
+    return {
+      type: "daily",
+      startDate: val.startDate.trim(),
+      daysCount,
+    };
+  }
+
+  return null;
+};
+
+const parseTransferCompletedDates = (
+  val: unknown
+): Record<string, boolean> => {
+  if (!isRecord(val)) {
+    return {};
+  }
+  const result: Record<string, boolean> = {};
+  for (const [k, v] of Object.entries(val)) {
+    if (typeof v === "boolean") {
+      result[k] = v;
+    }
+  }
+  return result;
+};
+
 const parseTransferCard = (value: unknown) => {
   if (!isRecord(value)) {
     return null;
@@ -76,12 +154,32 @@ const parseTransferCard = (value: unknown) => {
   const prioritized =
     typeof value.prioritized === "boolean" ? value.prioritized : false;
 
+  const importance =
+    typeof value.importance === "number" &&
+    Number.isFinite(value.importance)
+      ? Math.max(1, Math.min(5, Math.round(value.importance)))
+      : 3;
+
+  const urgency =
+    typeof value.urgency === "number" && Number.isFinite(value.urgency)
+      ? Math.max(1, Math.min(5, Math.round(value.urgency)))
+      : 3;
+
+  const schedule = parseTransferSchedule(value.schedule);
+  const completedDates = parseTransferCompletedDates(
+    value.completedDates
+  );
+
   return {
     _id: uuid(),
     text,
     description,
     done,
     prioritized,
+    importance,
+    urgency,
+    schedule,
+    completedDates,
     dayColor: null,
     dayColorDate: null,
   } as TaskList["cards"][number];
@@ -133,6 +231,10 @@ export const buildTasksTransferFile = (
         description: card.description ?? "",
         done: card.done,
         prioritized: card.prioritized,
+        importance: card.importance ?? 3,
+        urgency: card.urgency ?? 3,
+        schedule: card.schedule ?? null,
+        completedDates: card.completedDates ?? {},
       })),
     })),
   };

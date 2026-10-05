@@ -1,5 +1,7 @@
 <h1 align="center">Pomodoroz</h1>
 
+> 本地「规划工作台」文档：[产品与架构](PROJECT.md) · [验收标准](ACCEPTANCE.md) · [当前任务](TASK.md) · [当前结果](STATUS.md) · [使用指南](docs/USER_GUIDE.md)。下文保留开源上游说明；版本、构建与本地实际结果以仓库配置及 STATUS 为准。
+
 <h3 align="center">Flexible focus. Smarter breaks. Real progress.</h3>
 
 <p align="center"><em>Adaptive Focus Timer — 25/5 is a starting point, not a rule.</em></p>

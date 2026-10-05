@@ -34,12 +34,17 @@ import thirtySecondsLeftWav from "assets/audios/thirty-seconds-left.wav";
 import { useAppDispatch, useAppSelector } from "hooks/storeHooks";
 import { TimerStatus } from "store/timer/types";
 import { FULLSCREEN_BREAK_ENTERED, FULLSCREEN_BREAK_EXITED } from "ipc";
-import { TauriInvokeConnector } from "./connectors/TauriInvokeConnector";
+import { getInvokeConnector } from "./ConnectorContext";
+
+export type FocusMode = "pomodoro" | "countup";
 
 type CounterProps = {
   count: number;
   duration: number;
   timerType?: TimerStatus;
+  focusMode: FocusMode;
+  switchFocusMode: (mode: FocusMode) => void;
+  finishAndSaveSession: () => void;
   shouldPromptFocusExtension: boolean;
   shortFocusExtension: number;
   longFocusExtension: number;
@@ -53,6 +58,9 @@ type CounterProps = {
 const CounterContext = React.createContext<CounterProps>({
   count: 0,
   duration: 0,
+  focusMode: "pomodoro",
+  switchFocusMode: () => {},
+  finishAndSaveSession: () => {},
   shouldPromptFocusExtension: false,
   shortFocusExtension: 5,
   longFocusExtension: 10,
@@ -115,7 +123,10 @@ const getStatisticsBucket = (
     return StatisticsBucket.IDLE;
   }
 
-  if (timerType === TimerStatus.STAY_FOCUS) {
+  if (
+    timerType === TimerStatus.STAY_FOCUS ||
+    timerType === TimerStatus.COUNT_UP
+  ) {
     return StatisticsBucket.FOCUS;
   }
 
@@ -135,11 +146,7 @@ const buildTrackingSnapshot = ({
   totalRounds: number;
   activeTaskSelection: ResolvedActiveTaskSelection | null;
 }): TrackingSnapshot => {
-  const rawBucket = getStatisticsBucket(timerType, isPlaying);
-  const bucket =
-    rawBucket === StatisticsBucket.FOCUS && !activeTaskSelection
-      ? StatisticsBucket.IDLE
-      : rawBucket;
+  const bucket = getStatisticsBucket(timerType, isPlaying);
   const activeTask =
     bucket === StatisticsBucket.FOCUS && activeTaskSelection
       ? {
@@ -159,8 +166,16 @@ const buildTrackingSnapshot = ({
     ...activeTask,
     bucket,
     timerType: bucket === StatisticsBucket.IDLE ? "IDLE" : timerType,
-    round: bucket === StatisticsBucket.IDLE ? null : round,
-    totalRounds: bucket === StatisticsBucket.IDLE ? null : totalRounds,
+    round:
+      bucket === StatisticsBucket.IDLE ||
+      timerType === TimerStatus.COUNT_UP
+        ? null
+        : round,
+    totalRounds:
+      bucket === StatisticsBucket.IDLE ||
+      timerType === TimerStatus.COUNT_UP
+        ? null
+        : totalRounds,
   };
 };
 
@@ -222,6 +237,8 @@ const CounterProvider = ({ children }: PropsWithChildren) => {
   const breakTransitionTimeoutRef = useRef<ReturnType<
     typeof setTimeout
   > | null>(null);
+  const currentSessionIdRef = useRef<string>(createTrackingSessionId());
+  const sessionStartedAtRef = useRef<number | null>(null);
 
   const clearBreakTransitionTimeout = useCallback(() => {
     if (breakTransitionTimeoutRef.current === null) {
@@ -319,6 +336,111 @@ const CounterProvider = ({ children }: PropsWithChildren) => {
     [selectedTask, tasks]
   );
 
+  const focusMode: FocusMode =
+    timer.timerType === TimerStatus.COUNT_UP ? "countup" : "pomodoro";
+
+  const switchFocusMode = useCallback(
+    (mode: FocusMode) => {
+      dispatch(setPlay(false));
+      clearBreakTransitionTimeout();
+      trackingSegmentRef.current = null;
+      pendingCycleCompletionRef.current = false;
+      currentSessionIdRef.current = createTrackingSessionId();
+      sessionStartedAtRef.current = null;
+
+      if (mode === "countup") {
+        dispatch(setTimerType(TimerStatus.COUNT_UP));
+        setDuration(0);
+        setCount(0);
+      } else {
+        dispatch(setTimerType(TimerStatus.STAY_FOCUS));
+        setDuration(config.stayFocus * 60);
+        setCount(config.stayFocus * 60);
+      }
+    },
+    [clearBreakTransitionTimeout, config.stayFocus, dispatch]
+  );
+
+  const finishAndSaveSession = useCallback(() => {
+    const now = Date.now();
+    const sessionId =
+      currentSessionIdRef.current || createTrackingSessionId();
+    const startedAt = sessionStartedAtRef.current || now;
+
+    trackingSegmentRef.current = null;
+    pendingCycleCompletionRef.current = false;
+
+    if (timer.timerType === TimerStatus.COUNT_UP) {
+      const focusSeconds = Number(Math.max(0, count).toFixed(3));
+      if (focusSeconds > 0) {
+        dispatch(
+          addStatisticsSession({
+            id: sessionId,
+            bucket: StatisticsBucket.FOCUS,
+            timerType: TimerStatus.COUNT_UP,
+            durationSeconds: focusSeconds,
+            startedAt,
+            completedAt: now,
+            date: createStatisticsDateKey(now),
+            round: null,
+            totalRounds: null,
+            cycleCompleted: false,
+            listId: activeTaskSelection?.listId ?? null,
+            listTitle: activeTaskSelection?.listTitle ?? null,
+            taskId: activeTaskSelection?.cardId ?? null,
+            taskText: activeTaskSelection?.taskText ?? null,
+          })
+        );
+      }
+      setCount(0);
+      setDuration(0);
+      dispatch(setPlay(false));
+      currentSessionIdRef.current = createTrackingSessionId();
+      sessionStartedAtRef.current = null;
+      return;
+    }
+
+    if (timer.timerType === TimerStatus.STAY_FOCUS) {
+      const focusSeconds = Number(
+        Math.max(0, duration - count).toFixed(3)
+      );
+      if (focusSeconds > 0) {
+        dispatch(
+          addStatisticsSession({
+            id: sessionId,
+            bucket: StatisticsBucket.FOCUS,
+            timerType: TimerStatus.STAY_FOCUS,
+            durationSeconds: focusSeconds,
+            startedAt,
+            completedAt: now,
+            date: createStatisticsDateKey(now),
+            round: timer.round,
+            totalRounds: config.sessionRounds,
+            cycleCompleted: false,
+            listId: activeTaskSelection?.listId ?? null,
+            listTitle: activeTaskSelection?.listTitle ?? null,
+            taskId: activeTaskSelection?.cardId ?? null,
+            taskText: activeTaskSelection?.taskText ?? null,
+          })
+        );
+      }
+      setTimerDuration(config.stayFocus);
+      dispatch(setPlay(false));
+      currentSessionIdRef.current = createTrackingSessionId();
+      sessionStartedAtRef.current = null;
+    }
+  }, [
+    activeTaskSelection,
+    config.sessionRounds,
+    config.stayFocus,
+    count,
+    dispatch,
+    duration,
+    setTimerDuration,
+    timer.round,
+    timer.timerType,
+  ]);
+
   const trackingSnapshot = useMemo(
     () =>
       buildTrackingSnapshot({
@@ -343,6 +465,12 @@ const CounterProvider = ({ children }: PropsWithChildren) => {
       completedAt: number,
       cycleCompleted: boolean
     ) => {
+      // 核心保护：FOCUS 桶必须且只能由逻辑会话结算（自然完成或点击结束并保存）统一权威写入。
+      // 追踪分段切片（TrackingSegment）绝不写入 FOCUS 统计，防止切片与会话双重入账及未保存会话误入账。
+      if (segment.bucket === StatisticsBucket.FOCUS) {
+        return;
+      }
+
       const durationSeconds = Number(
         Math.max(0, segment.durationSeconds).toFixed(3)
       );
@@ -423,6 +551,22 @@ const CounterProvider = ({ children }: PropsWithChildren) => {
         }
       }
 
+      trackingSegmentRef.current = null;
+      pendingCycleCompletionRef.current = false;
+
+      if (timer.timerType === TimerStatus.COUNT_UP) {
+        setCount(0);
+        setDuration(0);
+        dispatch(setPlay(false));
+        currentSessionIdRef.current = createTrackingSessionId();
+        sessionStartedAtRef.current = null;
+        return;
+      }
+
+      dispatch(setPlay(false));
+      currentSessionIdRef.current = createTrackingSessionId();
+      sessionStartedAtRef.current = null;
+
       switch (timer.timerType) {
         case TimerStatus.STAY_FOCUS:
           setTimerDuration(config.stayFocus);
@@ -447,6 +591,7 @@ const CounterProvider = ({ children }: PropsWithChildren) => {
       config.stayFocus,
       config.shortBreak,
       setTimerDuration,
+      dispatch,
     ]
   );
 
@@ -542,17 +687,10 @@ const CounterProvider = ({ children }: PropsWithChildren) => {
   }, [trackingSnapshot, commitTrackingSegment]);
 
   useEffect(() => {
-    if (
-      timer.playing &&
-      timer.timerType === TimerStatus.STAY_FOCUS &&
-      !activeTaskSelection
-    ) {
-      dispatch(setPlay(false));
-    }
-  }, [activeTaskSelection, dispatch, timer.playing, timer.timerType]);
-
-  useEffect(() => {
     if (timer.playing) {
+      if (sessionStartedAtRef.current === null) {
+        sessionStartedAtRef.current = Date.now();
+      }
       setLastCountTime(Date.now());
     }
   }, [timer.playing]);
@@ -650,13 +788,16 @@ const CounterProvider = ({ children }: PropsWithChildren) => {
           const timePassed = now - lastCountTime;
 
           setLastCountTime(Date.now());
+          if (timer.timerType === TimerStatus.COUNT_UP) {
+            return prevState + timePassed / 1000;
+          }
           return prevState - timePassed / 1000;
         });
       }, countdownIntervalMs);
     }
 
     return () => clearInterval(timerInterval);
-  }, [timer.playing, lastCountTime, count]);
+  }, [timer.playing, lastCountTime, count, timer.timerType]);
 
   useEffect(() => {
     const isFocusExtensionWindow =
@@ -718,15 +859,47 @@ const CounterProvider = ({ children }: PropsWithChildren) => {
       });
     }
 
-    if (count <= 0 && !hasNotifiedBreak) {
+    if (
+      count <= 0 &&
+      !hasNotifiedBreak &&
+      timer.timerType !== TimerStatus.COUNT_UP
+    ) {
       setHasNotifiedBreak(true);
       switch (timer.timerType) {
         case TimerStatus.STAY_FOCUS: {
           pendingCycleCompletionRef.current = true;
+          const sessionId =
+            currentSessionIdRef.current || createTrackingSessionId();
+          const startedAt =
+            sessionStartedAtRef.current || Date.now() - duration * 1000;
+          dispatch(
+            addStatisticsSession({
+              id: sessionId,
+              bucket: StatisticsBucket.FOCUS,
+              timerType: TimerStatus.STAY_FOCUS,
+              durationSeconds: Number(Math.max(0, duration).toFixed(3)),
+              startedAt,
+              completedAt: Date.now(),
+              date: createStatisticsDateKey(Date.now()),
+              round: timer.round,
+              totalRounds: config.sessionRounds,
+              cycleCompleted: true,
+              listId: activeTaskSelection?.listId ?? null,
+              listTitle: activeTaskSelection?.listTitle ?? null,
+              taskId: activeTaskSelection?.cardId ?? null,
+              taskText: activeTaskSelection?.taskText ?? null,
+            })
+          );
+          currentSessionIdRef.current = createTrackingSessionId();
+          sessionStartedAtRef.current = null;
+          trackingSegmentRef.current = null;
+          pendingCycleCompletionRef.current = false;
+
           const isLastRound = timer.round >= config.sessionRounds;
           const nextBreakDuration = isLastRound
             ? config.longBreak
             : config.shortBreak;
+
           const nextBreakTimerType = isLastRound
             ? TimerStatus.LONG_BREAK
             : TimerStatus.SHORT_BREAK;
@@ -877,6 +1050,11 @@ const CounterProvider = ({ children }: PropsWithChildren) => {
     setHasNotified60Seconds,
     setHasNotifiedBreak,
     t,
+    activeTaskSelection?.cardId,
+    activeTaskSelection?.listId,
+    activeTaskSelection?.listTitle,
+    activeTaskSelection?.taskText,
+    duration,
   ]);
 
   useEffect(() => {
@@ -911,14 +1089,15 @@ const CounterProvider = ({ children }: PropsWithChildren) => {
   ]);
 
   useEffect(() => {
-    const cleanupEntered = TauriInvokeConnector.receive(
+    const connector = getInvokeConnector();
+    const cleanupEntered = connector.receive(
       FULLSCREEN_BREAK_ENTERED,
       () => {
         setShouldFullscreen(true);
       }
     );
 
-    const cleanupExited = TauriInvokeConnector.receive(
+    const cleanupExited = connector.receive(
       FULLSCREEN_BREAK_EXITED,
       () => {
         setShouldRequestFullscreen(false);
@@ -980,6 +1159,9 @@ const CounterProvider = ({ children }: PropsWithChildren) => {
       value={{
         count: Math.ceil(count),
         duration,
+        focusMode,
+        switchFocusMode,
+        finishAndSaveSession,
         shouldPromptFocusExtension,
         shortFocusExtension: config.shortFocusExtension,
         longFocusExtension: config.longFocusExtension,

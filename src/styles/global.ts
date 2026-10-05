@@ -1,9 +1,12 @@
-import { createGlobalStyle } from "styled-components";
+import { createGlobalStyle, css } from "styled-components";
 import { darkTheme, lightTheme } from "./themes";
+import { resolvePrimaryColors } from "./themePresets";
 
 type GlobalTypes = {
   isDarkMode?: boolean;
   useNativeTitlebar?: boolean;
+  themePreset?: string;
+  customPrimaryColor?: string | null;
 };
 
 export const GlobalStyles = createGlobalStyle<GlobalTypes>`
@@ -14,6 +17,31 @@ export const GlobalStyles = createGlobalStyle<GlobalTypes>`
         return darkTheme;
       }
       return lightTheme;
+    }}
+
+    ${(p) => {
+      const {
+        hex,
+        rgb,
+        buttonText,
+        textPrimary,
+        borderPrimary,
+        focusPrimary,
+      } = resolvePrimaryColors(
+        p.themePreset,
+        p.customPrimaryColor,
+        Boolean(p.isDarkMode)
+      );
+      return css`
+        --color-primary: ${hex};
+        --color-primary-rgb: ${rgb};
+        --color-primary-button: ${buttonText};
+        --color-primary-text: ${textPrimary};
+        --color-primary-border: ${borderPrimary};
+        --color-primary-focus: ${focusPrimary};
+        --color-bg-ripple-primary: rgba(${rgb}, 0.24);
+        --color-border-progress: rgba(${rgb}, 0.16);
+      `;
     }}
   }
 
@@ -30,13 +58,14 @@ export const GlobalStyles = createGlobalStyle<GlobalTypes>`
   }
 
   *:focus-visible {
-    outline: 2px solid rgba(var(--color-primary-rgb), 0.8);
+    outline: 2px solid var(--color-primary-focus);
     outline-offset: 2px;
   }
 
   html {
     width: 100%;
     height: 100%;
+    height: 100dvh;
 
     font-size: 62.5%;
     font-family: Noto-Sans, san-serif;
@@ -56,6 +85,7 @@ export const GlobalStyles = createGlobalStyle<GlobalTypes>`
   }
 
   #app {
+    width: 100%;
     height: 100%;
   }
 
@@ -66,18 +96,29 @@ export const GlobalStyles = createGlobalStyle<GlobalTypes>`
 
     width: 100%;
     height: 100%;
+    height: 100dvh;
     border: ${(p) =>
       !p.useNativeTitlebar
         ? "1px solid var(--color-border-window)"
-        : "none"} ;
+        : "none"};
     box-shadow: ${(p) =>
       !p.useNativeTitlebar && "0 1px 16px -4px rgba(0, 0, 0, 0.5)"};
     box-sizing: border-box;
+
+    @media (max-width: 768px) {
+      border: none;
+      box-shadow: none;
+    }
   }
 
   a {
     text-decoration: none;
-    color: currentColor;
+    color: var(--color-primary-text);
+    transition: color 120ms ease;
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 
   h1, h2, h3, h4, h5, h6 {

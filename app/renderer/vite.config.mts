@@ -47,6 +47,7 @@ export default defineConfig({
       i18n: `${ROOT_SRC_DIR}/i18n`,
       ipc: `${ROOT_SRC_DIR}/ipc`,
       routes: `${ROOT_SRC_DIR}/routes`,
+      services: `${ROOT_SRC_DIR}/services`,
       store: `${ROOT_SRC_DIR}/store`,
       styles: `${ROOT_SRC_DIR}/styles`,
       utils: `${ROOT_SRC_DIR}/utils`,

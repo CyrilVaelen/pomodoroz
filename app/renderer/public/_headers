@@ -1,0 +1,21 @@
+# ==============================================================================
+# Cloudflare Pages Headers Configuration
+# ==============================================================================
+
+# 静态资源缓存与安全防护
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: interest-cohort=()
+
+# Service Worker 与 Manifest 保证即时更新，不设置长缓存
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/manifest.webmanifest
+  Cache-Control: public, max-age=0, must-revalidate
+
+# HTML 入口页面每次核验最新构建版本
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate

@@ -1,4 +1,5 @@
 import { openUrl as openTauriUrl } from "@tauri-apps/plugin-opener";
+import { isTauri } from "./environment";
 
 const isAllowedExternalUrl = (url: string): boolean => {
   try {
@@ -14,6 +15,14 @@ export const openExternalUrl = async (
 ): Promise<boolean> => {
   if (!isAllowedExternalUrl(url)) {
     console.warn("[External URL] URL inválida bloqueada:", url);
+    return false;
+  }
+
+  if (!isTauri()) {
+    if (typeof window !== "undefined") {
+      window.open(url, "_blank", "noopener,noreferrer");
+      return true;
+    }
     return false;
   }
 

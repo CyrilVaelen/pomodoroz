@@ -65,7 +65,8 @@ export const StyledTaskSectionItem = styled.div<SectionTypes>`
   border-radius: 1px;
   border-bottom: 2px solid
     ${(p) =>
-      (p.priority && "var(--color-yellow)") || "var(--color-primary)"};
+      (p.priority && "var(--color-yellow)") ||
+      "var(--color-primary-border)"};
 
   background-color: var(--color-bg-task-list);
   box-shadow: 0 0px 0px var(--color-shadow-primary);
@@ -137,7 +138,7 @@ const HeaderIconButton = styled.button`
   transition: ${themes.transition};
 
   &:hover {
-    color: var(--color-primary) !important;
+    color: var(--color-primary-text) !important;
     background-color: var(--color-border-primary);
   }
 

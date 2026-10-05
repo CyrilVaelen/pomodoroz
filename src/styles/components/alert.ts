@@ -9,25 +9,25 @@ export const StyledAlert = styled.div`
   padding: 0.8rem;
 
   border-radius: 2px;
-  border: 1px solid rgba(var(--color-primary-rgb), 0.2);
+  border: 1px solid var(--color-primary-border);
   background-color: rgba(var(--color-primary-rgb), 0.1);
 
   position: relative;
 
   header {
     h3 {
-      color: rgba(var(--color-primary-rgb), 1);
+      color: var(--color-primary-text);
       font-size: 1.4rem;
       margin-bottom: 0.2rem;
     }
 
     p {
-      color: rgba(var(--color-primary-rgb), 0.8);
+      color: var(--color-heading-text);
     }
 
     a {
       font-weight: 500;
-      color: rgba(var(--color-primary-rgb), 1);
+      color: var(--color-primary-text);
 
       &:hover {
         text-decoration: underline;
@@ -44,7 +44,7 @@ export const StyledAlertCloseButton = styled.button`
   width: 2.4rem;
   height: 2.4rem;
 
-  color: rgba(var(--color-primary-rgb), 1);
+  color: var(--color-primary-text);
 
   border: none;
   border-radius: 10rem;

@@ -54,14 +54,14 @@ export const StyledButtonNormal = styled.button`
 
   &:hover,
   &:focus {
-    color: var(--color-primary);
-    border-color: var(--color-primary);
+    color: var(--color-primary-text);
+    border-color: var(--color-primary-border);
     box-shadow: 0 0 0 0.2rem rgba(var(--color-primary-rgb), 0.16);
   }
 
   &:active {
-    color: var(--color-primary);
-    border-color: var(--color-primary);
+    color: var(--color-primary-text);
+    border-color: var(--color-primary-border);
     box-shadow: 0 0 0 0.4rem rgba(var(--color-primary-rgb), 0.16);
   }
 `;
@@ -69,13 +69,14 @@ export const StyledButtonNormal = styled.button`
 export const StyledButtonPrimary = styled.button`
   ${ButtonStyles};
   color: var(--color-primary-button);
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-border);
   background-color: var(--color-primary);
   box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb), 0.16);
 
   &:hover,
   &:focus {
     box-shadow: 0 0 0 0.2rem rgba(var(--color-primary-rgb), 0.16);
+    opacity: 0.92;
   }
 
   &:active {
@@ -85,12 +86,15 @@ export const StyledButtonPrimary = styled.button`
 
 export const StyledButtonSecondary = styled.button`
   ${ButtonStyles};
-  color: var(--color-primary);
-  border-color: var(--color-primary);
+  color: var(--color-primary-text);
+  border-color: var(--color-primary-border);
   box-shadow: 0 0 0 0 rgba(var(--color-primary-rgb), 0.16);
 
   &:hover,
   &:focus {
+    color: var(--color-primary-text);
+    border-color: var(--color-primary-text);
+    background-color: rgba(var(--color-primary-rgb), 0.08);
     box-shadow: 0 0 0 0.2rem rgba(var(--color-primary-rgb), 0.16);
   }
 

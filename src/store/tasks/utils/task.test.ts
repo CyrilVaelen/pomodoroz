@@ -24,6 +24,43 @@ describe("task utilities", () => {
       prioritized: false,
       dayColor: null,
       dayColorDate: null,
+      importance: 3,
+      urgency: 3,
+      schedule: null,
+      completedDates: {},
+    });
+  });
+
+  it("creates tasks with custom rating and schedule", () => {
+    uuidV4Mock.mockReturnValue("task-id-custom");
+
+    expect(
+      createTask({
+        text: "Custom task",
+        importance: 5,
+        urgency: 2,
+        schedule: {
+          type: "daily",
+          startDate: "2026-10-04",
+          daysCount: 3,
+        },
+      })
+    ).toEqual({
+      _id: "task-id-custom",
+      text: "Custom task",
+      description: "",
+      done: false,
+      prioritized: false,
+      dayColor: null,
+      dayColorDate: null,
+      importance: 5,
+      urgency: 2,
+      schedule: {
+        type: "daily",
+        startDate: "2026-10-04",
+        daysCount: 3,
+      },
+      completedDates: {},
     });
   });
 

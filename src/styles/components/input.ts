@@ -18,7 +18,7 @@ export const StyledInput = styled.input.attrs(() => ({ type: "text" }))`
   }
 
   &:focus {
-    border-color: var(--color-primary);
+    border-color: var(--color-primary-border);
     box-shadow: 0 0 0 0.2rem rgba(var(--color-primary-rgb), 0.16);
   }
 `;

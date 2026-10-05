@@ -135,7 +135,7 @@ export const StyledDescriptionFormatHelp = styled.a`
   padding: 0 0.4rem;
 
   &:hover {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 `;
 
@@ -227,7 +227,7 @@ export const StyledDescriptionPreviewer = styled.div<{
   }
 
   a {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
     &:hover {
       text-decoration: underline;
     }
@@ -307,8 +307,8 @@ export const StyledDescriptionPreviewer = styled.div<{
 
   blockquote {
     padding: 0 1em;
-    color: rgba(var(--color-primary-rgb), 0.8);
-    border-left: 0.25em solid rgba(var(--color-primary-rgb), 0.2);
+    color: var(--color-primary-text);
+    border-left: 0.25em solid var(--color-primary-border);
   }
 
   dt {

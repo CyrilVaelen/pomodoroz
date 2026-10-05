@@ -3,7 +3,9 @@ import {
   NotificationTypes,
   SettingTypes,
 } from "./types";
-import { DEFAULT_SHORTCUTS, detectOS, isPreferredDark } from "utils";
+import { DEFAULT_SHORTCUTS } from "../../utils/shortcuts";
+import { detectOS } from "../../utils/detectOS";
+import { isPreferredDark } from "../../utils/isPrefferedDark";
 
 export const defaultSettings: Readonly<SettingTypes> = Object.freeze({
   alwaysOnTop: false,
@@ -30,5 +32,8 @@ export const defaultSettings: Readonly<SettingTypes> = Object.freeze({
   openAtLogin: false,
   enableInAppAutoUpdate: false,
   language: "auto",
+  hideCountUpElapsedTime: false,
+  themePreset: "default",
+  customPrimaryColor: null,
   shortcuts: { ...DEFAULT_SHORTCUTS },
 });

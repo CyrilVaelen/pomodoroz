@@ -1,5 +1,6 @@
 import { locale as getSystemLocale } from "@tauri-apps/plugin-os";
 import { LanguageCode } from "store/settings/types";
+import { isTauri } from "utils/environment";
 
 export const supportedLanguages: Array<{
   code: LanguageCode;
@@ -45,6 +46,10 @@ export const detectSystemLanguageSync = (): LanguageCode =>
   normalizeLanguageCode(detectBrowserLanguage());
 
 export const detectSystemLanguage = async (): Promise<LanguageCode> => {
+  if (!isTauri()) {
+    return detectSystemLanguageSync();
+  }
+
   try {
     const locale = await getSystemLocale();
     return normalizeLanguageCode(locale || detectBrowserLanguage());

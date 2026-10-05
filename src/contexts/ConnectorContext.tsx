@@ -1,6 +1,9 @@
 import React, { type PropsWithChildren } from "react";
+import { isTauri } from "utils/environment";
 import { TauriConnectorProvider } from "./connectors/TauriConnector";
 import { TauriInvokeConnector } from "./connectors/TauriInvokeConnector";
+import { BrowserConnectorProvider } from "./connectors/BrowserConnector";
+import { BrowserInvokeConnector } from "./connectors/BrowserInvokeConnector";
 
 export type ConnectorProps = {
   onMinimizeCallback?: () => void;
@@ -13,9 +16,13 @@ export type ConnectorProps = {
 export const ConnectorContext = React.createContext<ConnectorProps>({});
 
 export function getInvokeConnector() {
-  return TauriInvokeConnector;
+  return isTauri() ? TauriInvokeConnector : BrowserInvokeConnector;
 }
 
 export const ConnectorProvider = ({ children }: PropsWithChildren) => {
-  return <TauriConnectorProvider>{children}</TauriConnectorProvider>;
+  return isTauri() ? (
+    <TauriConnectorProvider>{children}</TauriConnectorProvider>
+  ) : (
+    <BrowserConnectorProvider>{children}</BrowserConnectorProvider>
+  );
 };

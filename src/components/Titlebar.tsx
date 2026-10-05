@@ -12,6 +12,7 @@ import {
 } from "styles";
 import { ConnectorContext } from "contexts";
 import { APP_NAME, APP_VERSION } from "config";
+import { isTauri } from "utils";
 
 import appIcon from "assets/logos/tray.png";
 import appIconDark from "assets/logos/tray-dark.png";
@@ -66,10 +67,12 @@ const Titlebar: React.FC<Props> = ({ darkMode, timerType }) => {
         </StyledMarkWrapper>
       </StyledTitlebarDragRegion>
 
-      <StyledWindowActions>
-        <StyledMinimizeButton onClick={onMinimizeCallback} />
-        <StyledCloseButton onClick={onExitCallback} />
-      </StyledWindowActions>
+      {isTauri() && (
+        <StyledWindowActions>
+          <StyledMinimizeButton onClick={onMinimizeCallback} />
+          <StyledCloseButton onClick={onExitCallback} />
+        </StyledWindowActions>
+      )}
     </StyledTitlebar>
   );
 };

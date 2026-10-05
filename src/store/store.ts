@@ -14,6 +14,7 @@ import taskSelectionReducer from "./taskSelection";
 import timerReducer from "./timer";
 import tasksReducer from "./tasks";
 import updateReducer from "./update";
+import { syncEngine } from "services/supabase";
 
 export type AppStateTypes = ReturnType<typeof store.getState>;
 export type AppDispatchTypes = typeof store.dispatch;
@@ -57,19 +58,59 @@ if (canPersistStatistics && persistedStatisticsResult.status !== "ok") {
   saveToStorage(STATISTICS_STORAGE_KEY, store.getState().statistics);
 }
 
+let prevTasks = store.getState().tasks?.present;
+let prevSettings = store.getState().settings;
+let prevSessions = store.getState().statistics?.sessions ?? [];
+
+const syncToCloudIfChanged = () => {
+  if (syncEngine.isApplyingRemoteChanges()) {
+    prevTasks = store.getState().tasks?.present;
+    prevSettings = store.getState().settings;
+    prevSessions = store.getState().statistics?.sessions ?? [];
+    return;
+  }
+
+  const currentTasks = store.getState().tasks?.present;
+  const currentSettings = store.getState().settings;
+  const currentSessions = store.getState().statistics?.sessions ?? [];
+
+  if (currentTasks && currentTasks !== prevTasks) {
+    prevTasks = currentTasks;
+    syncEngine.enqueueTasksSync(currentTasks);
+  }
+
+  if (currentSettings && currentSettings !== prevSettings) {
+    prevSettings = currentSettings;
+    syncEngine.enqueueSettingsSync(currentSettings);
+  }
+
+  if (currentSessions !== prevSessions) {
+    const prevIds = new Set((prevSessions || []).map((s) => s.id));
+    const newSessions = (currentSessions || []).filter(
+      (s) => !prevIds.has(s.id)
+    );
+    for (const session of newSessions) {
+      syncEngine.enqueueSessionSync(session);
+    }
+    prevSessions = currentSessions;
+  }
+};
+
 const persistRootState = () => {
   if (canPersistRootState) {
     saveToStorage("state", {
       config: store.getState().config,
       settings: store.getState().settings,
       taskSelection: store.getState().taskSelection,
-      tasks: store.getState().tasks.present,
+      tasks: store.getState().tasks?.present,
     });
   }
 
-  if (canPersistStatistics) {
+  if (canPersistStatistics && store.getState().statistics) {
     saveToStorage(STATISTICS_STORAGE_KEY, store.getState().statistics);
   }
+
+  syncToCloudIfChanged();
 };
 
 const debouncedPersistRootState = debounce(persistRootState, 1000);
@@ -88,14 +129,22 @@ if (typeof window !== "undefined") {
   };
 
   const onVisibilityChange = () => {
-    if (document.visibilityState === "hidden") {
+    if (
+      typeof document !== "undefined" &&
+      document.visibilityState === "hidden"
+    ) {
       flushOnPageLifecycleEvent();
     }
   };
 
-  window.addEventListener("beforeunload", flushOnPageLifecycleEvent);
-  window.addEventListener("pagehide", flushOnPageLifecycleEvent);
-  document.addEventListener("visibilitychange", onVisibilityChange);
+  if (window.addEventListener) {
+    window.addEventListener("beforeunload", flushOnPageLifecycleEvent);
+    window.addEventListener("pagehide", flushOnPageLifecycleEvent);
+  }
+
+  if (typeof document !== "undefined" && document.addEventListener) {
+    document.addEventListener("visibilitychange", onVisibilityChange);
+  }
 }
 
 export default store;

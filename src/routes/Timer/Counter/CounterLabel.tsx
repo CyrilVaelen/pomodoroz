@@ -12,8 +12,10 @@ const CounterLabel: React.FC<Props> = ({ timerType }) => {
 
   return (
     <StyledCounterLabel>
-      {(timerType === TimerStatus.SHORT_BREAK &&
-        t("timer.shortBreak")) ||
+      {(timerType === TimerStatus.COUNT_UP &&
+        t("timer.countUp", "正计时")) ||
+        (timerType === TimerStatus.SHORT_BREAK &&
+          t("timer.shortBreak")) ||
         (timerType === TimerStatus.LONG_BREAK &&
           t("timer.longBreak")) ||
         (timerType === TimerStatus.SPECIAL_BREAK &&

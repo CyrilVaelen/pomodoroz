@@ -22,6 +22,7 @@ import {
   setOpenAtLogin,
   setEnableInAppAutoUpdate,
   setFollowSystemTheme,
+  setHideCountUpElapsedTime,
 } from "store";
 import { Toggler, TogglerProps, Collapse, Radio } from "components";
 import { ThemeContext } from "contexts";
@@ -166,6 +167,16 @@ const FeatureSection: React.FC = () => {
           setEnableFocusExtension(!settings.enableFocusExtension)
         );
       }, [dispatch, settings.enableFocusExtension]),
+    },
+    {
+      id: "hide-count-up-elapsed-time",
+      label: t("settings.hideCountUpElapsedTime"),
+      checked: settings.hideCountUpElapsedTime,
+      onChange: useCallback(() => {
+        dispatch(
+          setHideCountUpElapsedTime(!settings.hideCountUpElapsedTime)
+        );
+      }, [dispatch, settings.hideCountUpElapsedTime]),
     },
     {
       id: "auto-start-work-time",

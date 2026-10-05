@@ -9,6 +9,7 @@ type Props = {
   seconds: string;
   compact?: boolean;
   fullscreen?: boolean;
+  hideElapsedTime?: boolean;
 };
 
 const CounterTimer: React.FC<Props> = ({
@@ -18,23 +19,31 @@ const CounterTimer: React.FC<Props> = ({
   seconds,
   compact,
   fullscreen,
+  hideElapsedTime = false,
 }) => {
   return (
     <StyledCounterTimer
+      data-testid="counter-timer"
       hours={hours}
       type={timerType}
       className={compact ? "compact" : ""}
       fullscreen={fullscreen}
+      $hidden={hideElapsedTime}
+      aria-hidden={hideElapsedTime ? "true" : undefined}
     >
-      {Number(hours) > 0 && (
+      {!hideElapsedTime && (
         <>
-          <span>{compact ? hours[hours.length - 1] : hours}</span>
+          {Number(hours) > 0 && (
+            <>
+              <span>{compact ? hours[hours.length - 1] : hours}</span>
+              <span>:</span>
+            </>
+          )}
+          <span>{minutes}</span>
           <span>:</span>
+          <span>{seconds}</span>
         </>
       )}
-      <span>{minutes}</span>
-      <span>:</span>
-      <span>{seconds}</span>
     </StyledCounterTimer>
   );
 };

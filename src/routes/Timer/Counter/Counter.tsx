@@ -1,6 +1,7 @@
 import { CounterContext } from "contexts";
 import { useTime } from "hooks";
 import React, { useContext } from "react";
+import { TimerStatus } from "store/timer/types";
 import { useAppSelector } from "hooks/storeHooks";
 import {
   StyledCounterContainer,
@@ -10,6 +11,7 @@ import {
 import CounterLabel from "./CounterLabel";
 import CounterTimer from "./CounterTimer";
 import CounterType from "./CounterType";
+import { isCountUpElapsedTimeHidden } from "./utils";
 
 const Counter: React.FC = () => {
   const settings = useAppSelector((state) => state.settings);
@@ -22,6 +24,10 @@ const Counter: React.FC = () => {
     duration > 0 ? (duration - safeCount) * (674 / duration) : 0;
 
   const { hours, minutes, seconds } = useTime(safeCount);
+  const isElapsedTimeHidden = isCountUpElapsedTimeHidden(
+    settings.hideCountUpElapsedTime,
+    timerType
+  );
 
   if (settings.compactMode) {
     return (
@@ -47,6 +53,7 @@ const Counter: React.FC = () => {
                 hours={hours}
                 minutes={minutes}
                 seconds={seconds}
+                hideElapsedTime={isElapsedTimeHidden}
               />
               <CounterLabel timerType={timerType} />
             </StyledCounterWrapper>
@@ -58,6 +65,7 @@ const Counter: React.FC = () => {
             hours={hours}
             minutes={minutes}
             seconds={seconds}
+            hideElapsedTime={isElapsedTimeHidden}
           />
         )}
       </StyledCounterContainer>
@@ -80,6 +88,7 @@ const Counter: React.FC = () => {
           timerType={timerType}
           minutes={minutes}
           seconds={seconds}
+          hideElapsedTime={isElapsedTimeHidden}
         />
 
         <CounterLabel timerType={timerType} />

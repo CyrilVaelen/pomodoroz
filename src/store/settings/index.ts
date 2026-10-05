@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import {
   getFromStorage,
   isReservedShortcut,
@@ -101,6 +101,10 @@ const isSettingValue = <K extends keyof SettingTypes>(
       return isNotificationSound(value);
     case "language":
       return isLanguageOption(value);
+    case "themePreset":
+      return typeof value === "string";
+    case "customPrimaryColor":
+      return value === null || typeof value === "string";
     case "shortcuts":
       return (
         normalizeShortcutSettings(value, defaultSettings.shortcuts) !==
@@ -323,6 +327,13 @@ const settingsSlice = createSlice({
       state.language = action.payload;
     },
 
+    setHideCountUpElapsedTime(
+      state,
+      action: SettingsPayload<"hideCountUpElapsedTime">
+    ) {
+      state.hideCountUpElapsedTime = action.payload;
+    },
+
     setShortcut(
       state,
       action: {
@@ -345,6 +356,32 @@ const settingsSlice = createSlice({
       state.shortcuts[action.payload.shortcut] = normalizedShortcut;
     },
 
+    setThemePreset(state, action: PayloadAction<string>) {
+      state.themePreset = action.payload;
+    },
+
+    setCustomPrimaryColor(state, action: PayloadAction<string | null>) {
+      state.customPrimaryColor = action.payload;
+    },
+
+    updateSettings(
+      state,
+      action: PayloadAction<Partial<SettingTypes>>
+    ) {
+      Object.assign(state, action.payload);
+      if (action.payload.shortcuts) {
+        state.shortcuts = {
+          ...state.shortcuts,
+          ...action.payload.shortcuts,
+        };
+      }
+    },
+
+    resetThemeSettings(state) {
+      state.themePreset = "default";
+      state.customPrimaryColor = null;
+    },
+
     restoreDefaultSettings() {
       return cloneSettings(defaultSettings);
     },
@@ -352,7 +389,11 @@ const settingsSlice = createSlice({
 });
 
 export const {
+  updateSettings,
   restoreDefaultSettings,
+  resetThemeSettings,
+  setThemePreset,
+  setCustomPrimaryColor,
   setAlwaysOnTop,
   setAutoStartWorkTime,
   setResetFocusToIdleEnabled,
@@ -368,6 +409,7 @@ export const {
   setEnableProgressAnimation,
   setEnableStrictMode,
   setEnableVoiceAssistance,
+  setHideCountUpElapsedTime,
   setIgnoreUpdate,
   setMinimizeToTray,
   setNotificationSound,

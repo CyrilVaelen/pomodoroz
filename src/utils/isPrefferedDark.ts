@@ -1,2 +1,6 @@
-export const isPreferredDark = (): boolean =>
-  window.matchMedia("(prefers-color-scheme: dark)").matches;
+export const isPreferredDark = (): boolean => {
+  if (typeof window === "undefined" || !window.matchMedia) {
+    return false;
+  }
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+};

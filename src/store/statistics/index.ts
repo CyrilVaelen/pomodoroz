@@ -1,13 +1,12 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { createSlice } from "@reduxjs/toolkit";
-import { getFromStorage } from "utils";
+import { getFromStorage } from "../../utils";
 import type { StatisticsSessionRecord, StatisticsState } from "./types";
 
 export const STATISTICS_STORAGE_KEY = "statistics";
 
 const getStatisticsStateFromStorage = ():
-  | StatisticsState
-  | undefined => {
+  StatisticsState | undefined => {
   const dedicatedState = getFromStorage<StatisticsState>(
     STATISTICS_STORAGE_KEY
   );
@@ -68,27 +67,12 @@ const statisticsSlice = createSlice({
         return;
       }
 
-      const lastSession = state.sessions.at(-1);
+      const existingIndex = state.sessions.findIndex(
+        (session) => session.id === action.payload.id
+      );
 
-      if (
-        lastSession &&
-        isMergeableSession(lastSession, action.payload)
-      ) {
-        lastSession.durationSeconds = Number(
-          (
-            lastSession.durationSeconds + action.payload.durationSeconds
-          ).toFixed(3)
-        );
-        lastSession.startedAt = Math.min(
-          lastSession.startedAt,
-          action.payload.startedAt
-        );
-        lastSession.completedAt = Math.max(
-          lastSession.completedAt,
-          action.payload.completedAt
-        );
-        lastSession.cycleCompleted =
-          lastSession.cycleCompleted || action.payload.cycleCompleted;
+      if (existingIndex >= 0) {
+        state.sessions[existingIndex] = action.payload;
         return;
       }
 

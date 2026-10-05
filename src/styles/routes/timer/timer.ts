@@ -51,8 +51,8 @@ export const StyledFocusExtensionButton = styled.button`
   min-height: 2.6rem;
   padding: 0.35rem 0.7rem;
 
-  color: var(--color-primary);
-  border: 1px solid var(--color-primary);
+  color: var(--color-primary-text);
+  border: 1px solid var(--color-primary-border);
   border-radius: 3px;
   background-color: var(--color-bg-primary);
 

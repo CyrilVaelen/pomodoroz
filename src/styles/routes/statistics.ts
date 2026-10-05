@@ -92,8 +92,8 @@ export const StyledStatisticsMilestone = styled.span`
   padding: 0 0.7rem;
 
   border-radius: 99px;
-  color: var(--color-primary);
-  border: 1px solid rgba(var(--color-primary-rgb), 0.32);
+  color: var(--color-primary-text);
+  border: 1px solid var(--color-primary-border);
   background-color: rgba(var(--color-primary-rgb), 0.08);
   font-size: 1rem;
   font-weight: 500;
@@ -289,8 +289,8 @@ export const StyledStatisticsCycleBadge = styled.span`
   padding: 0 0.6rem;
 
   border-radius: 99px;
-  color: var(--color-primary);
-  border: 1px solid rgba(var(--color-primary-rgb), 0.4);
+  color: var(--color-primary-text);
+  border: 1px solid var(--color-primary-border);
   background-color: rgba(var(--color-primary-rgb), 0.08);
   font-size: 1.1rem;
   font-weight: 500;
@@ -338,5 +338,42 @@ export const StyledStatisticsLegendItem = styled.span<{
         : p.$variant === "break"
           ? "var(--color-yellow)"
           : "var(--color-disabled-text)"};
+  }
+`;
+
+export const StyledPeriodNav = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin-top: 0.8rem;
+`;
+
+export const StyledPeriodLabel = styled.span`
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--color-heading-text);
+  padding: 0 0.4rem;
+`;
+
+export const StyledPeriodButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.8rem;
+  font-size: 1.1rem;
+  border-radius: 3px;
+  border: 1px solid var(--color-border-primary);
+  background-color: var(--color-bg-secondary);
+  color: var(--color-body-text);
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--color-border-primary);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `;

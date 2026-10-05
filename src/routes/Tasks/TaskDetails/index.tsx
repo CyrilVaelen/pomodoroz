@@ -7,7 +7,12 @@ import {
   removeTaskCard,
   setTaskCardDone,
   setTaskCardNotDone,
+  setTaskRating,
+  setTaskSchedule,
 } from "store";
+import styled from "styled-components";
+import TaskScheduleModal from "../TaskScheduleModal";
+import type { TaskSchedule } from "store/tasks/types";
 
 import {
   StyledDetailContainer,
@@ -25,6 +30,107 @@ import {
 import { Checkbox, SVG } from "components";
 import MDPreviewer from "./MDPreviewer";
 import { useTranslation } from "react-i18next";
+
+const StyledScoreSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 0.8rem 1rem;
+  border-radius: 6px;
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
+  margin-bottom: 1.2rem;
+`;
+
+const StyledScoreRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+`;
+
+const StyledScoreLabel = styled.span`
+  font-size: 1.15rem;
+  color: var(--color-heading-text);
+  font-weight: 500;
+`;
+
+const StyledScoreBtnGroup = styled.div`
+  display: flex;
+  gap: 0.4rem;
+`;
+
+const StyledScoreBtn = styled.button<{ $active: boolean }>`
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 4px;
+  border: 1px solid
+    ${(p) =>
+      p.$active
+        ? "var(--color-primary-border)"
+        : "var(--color-border-primary)"};
+  background-color: ${(p) =>
+    p.$active ? "var(--color-primary)" : "var(--color-bg-primary)"};
+  color: ${(p) =>
+    p.$active
+      ? "var(--color-primary-button)"
+      : "var(--color-body-text)"};
+  font-weight: ${(p) => (p.$active ? "600" : "400")};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: all 120ms ease;
+
+  &:hover {
+    ${(p) => !p.$active && "background-color: var(--color-bg-tertiary);"}
+  }
+`;
+
+const StyledScheduleRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  border-radius: 6px;
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
+  margin-bottom: 1.2rem;
+`;
+
+const StyledScheduleInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+`;
+
+const StyledScheduleLabel = styled.span`
+  font-size: 1.1rem;
+  color: var(--color-disabled-text);
+`;
+
+const StyledScheduleValue = styled.span`
+  font-size: 1.2rem;
+  color: var(--color-heading-text);
+  font-weight: 500;
+`;
+
+const StyledScheduleButton = styled.button`
+  padding: 0.4rem 0.8rem;
+  font-size: 1.1rem;
+  border-radius: 4px;
+  border: 1px solid var(--color-primary-border);
+  background-color: var(--color-bg-primary);
+  color: var(--color-primary-text);
+  cursor: pointer;
+  transition: all 120ms ease;
+
+  &:hover {
+    background-color: var(--color-bg-tertiary);
+  }
+`;
 
 type Props = {
   listId: string;
@@ -52,6 +158,47 @@ const TaskDetails = ({ listId, cardId, onExit, ref }: Props) => {
   const [description, setDescription] = useState(card?.description);
 
   const [showPreview, setShowPreview] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+
+  const importance =
+    typeof card?.importance === "number" ? card.importance : 3;
+  const urgency = typeof card?.urgency === "number" ? card.urgency : 3;
+
+  const onChangeImportance = useCallback(
+    (val: number) => {
+      dispatch(
+        setTaskRating({
+          listId,
+          cardId,
+          importance: val,
+          urgency,
+        })
+      );
+    },
+    [dispatch, listId, cardId, urgency]
+  );
+
+  const onChangeUrgency = useCallback(
+    (val: number) => {
+      dispatch(
+        setTaskRating({
+          listId,
+          cardId,
+          importance,
+          urgency: val,
+        })
+      );
+    },
+    [dispatch, listId, cardId, importance]
+  );
+
+  const onSaveSchedule = useCallback(
+    (schedule: TaskSchedule | null) => {
+      dispatch(setTaskSchedule({ listId, cardId, schedule }));
+      setShowScheduleModal(false);
+    },
+    [dispatch, listId, cardId]
+  );
 
   useEffect(() => {
     if (cardTextAreaRef.current) {
@@ -158,6 +305,69 @@ const TaskDetails = ({ listId, cardId, onExit, ref }: Props) => {
       </StyledDetailCloseButton>
 
       <StyledDescriptionWrappper>
+        <StyledScoreSection>
+          <StyledScoreRow>
+            <StyledScoreLabel>
+              {t("tasks.importance", "重要性")}: {importance}
+            </StyledScoreLabel>
+            <StyledScoreBtnGroup>
+              {[1, 2, 3, 4, 5].map((num) => (
+                <StyledScoreBtn
+                  key={num}
+                  $active={importance === num}
+                  onClick={() => onChangeImportance(num)}
+                  type="button"
+                >
+                  {num}
+                </StyledScoreBtn>
+              ))}
+            </StyledScoreBtnGroup>
+          </StyledScoreRow>
+
+          <StyledScoreRow>
+            <StyledScoreLabel>
+              {t("tasks.urgency", "紧急性")}: {urgency}
+            </StyledScoreLabel>
+            <StyledScoreBtnGroup>
+              {[1, 2, 3, 4, 5].map((num) => (
+                <StyledScoreBtn
+                  key={num}
+                  $active={urgency === num}
+                  onClick={() => onChangeUrgency(num)}
+                  type="button"
+                >
+                  {num}
+                </StyledScoreBtn>
+              ))}
+            </StyledScoreBtnGroup>
+          </StyledScoreRow>
+        </StyledScoreSection>
+
+        <StyledScheduleRow>
+          <StyledScheduleInfo>
+            <StyledScheduleLabel>
+              {t("tasks.scheduleTitle", "明确日期计划")}
+            </StyledScheduleLabel>
+            <StyledScheduleValue>
+              {card?.schedule?.type === "weekly"
+                ? `${t("tasks.scheduleWeekly", "周计划")} (${card.schedule.selectedWeeks.length} 周)`
+                : card?.schedule?.type === "monthly"
+                  ? `${t("tasks.scheduleMonthly", "月计划")} (${card.schedule.selectedDates.length} 天)`
+                  : card?.schedule?.type === "daily"
+                    ? `${t("tasks.scheduleDaily", "连续天数")} (${card.schedule.daysCount} 天)`
+                    : t("tasks.noSchedule", "未安排日期")}
+            </StyledScheduleValue>
+          </StyledScheduleInfo>
+          <StyledScheduleButton
+            type="button"
+            onClick={() => setShowScheduleModal(true)}
+          >
+            {card?.schedule
+              ? t("tasks.editSchedule", "修改计划")
+              : t("tasks.setSchedule", "设置计划")}
+          </StyledScheduleButton>
+        </StyledScheduleRow>
+
         <StyledDescriptionHeading>
           {t("tasks.description")}
           <Checkbox
@@ -223,6 +433,14 @@ const TaskDetails = ({ listId, cardId, onExit, ref }: Props) => {
       <StyledDeleteButton onClick={onCardDeleteAction}>
         <SVG name="trash" /> {t("tasks.deleteCard")}
       </StyledDeleteButton>
+
+      {showScheduleModal && card && (
+        <TaskScheduleModal
+          task={card}
+          onSave={onSaveSchedule}
+          onClose={() => setShowScheduleModal(false)}
+        />
+      )}
     </StyledDetailContainer>
   );
 };

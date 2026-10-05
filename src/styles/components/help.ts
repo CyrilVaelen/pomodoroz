@@ -12,7 +12,7 @@ export const StyledHelpWrapper = styled.a`
 
   &:hover,
   &:focus {
-    color: var(--color-primary);
+    color: var(--color-primary-text);
   }
 
   &::after {

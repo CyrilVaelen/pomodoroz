@@ -315,4 +315,109 @@ describe("tasks reducer", () => {
     expect(nextState.present[0]?.cards[0]?.dayColor).toBeNull();
     expect(nextState.past).toEqual([state.present]);
   });
+
+  it("兼容旧数据并默认初始化重要性 3、紧急性 3、无计划与空完成记录", async () => {
+    setupLocalStorage();
+
+    const { default: reducer } = await import("./index");
+    const state = reducer(undefined, { type: "@@INIT" });
+    const card = state.present[0]?.cards[0];
+
+    expect(card?.importance).toBe(3);
+    expect(card?.urgency).toBe(3);
+    expect(card?.schedule).toBeNull();
+    expect(card?.completedDates).toEqual({});
+  });
+
+  it("支持更新任务评分（并夹紧在 1-5 之间）", async () => {
+    setupLocalStorage();
+
+    const { default: reducer, setTaskRating } = await import("./index");
+    let state = reducer(undefined, { type: "@@INIT" });
+
+    state = reducer(
+      state,
+      setTaskRating({
+        listId: "list-id-1",
+        cardId: "task-id-1",
+        importance: 5,
+        urgency: 1,
+      })
+    );
+
+    expect(state.present[0]?.cards[0]?.importance).toBe(5);
+    expect(state.present[0]?.cards[0]?.urgency).toBe(1);
+
+    // 测试超出边界 clamping
+    state = reducer(
+      state,
+      setTaskRating({
+        listId: "list-id-1",
+        cardId: "task-id-1",
+        importance: 99,
+        urgency: -10,
+      })
+    );
+    expect(state.present[0]?.cards[0]?.importance).toBe(5);
+    expect(state.present[0]?.cards[0]?.urgency).toBe(1);
+  });
+
+  it("支持设置明确计划与单日独立完成/恢复", async () => {
+    setupLocalStorage();
+
+    const {
+      default: reducer,
+      setTaskSchedule,
+      toggleTaskDateCompletion,
+    } = await import("./index");
+    let state = reducer(undefined, { type: "@@INIT" });
+
+    // 设置计划
+    state = reducer(
+      state,
+      setTaskSchedule({
+        listId: "list-id-1",
+        cardId: "task-id-1",
+        schedule: {
+          type: "daily",
+          startDate: "2026-10-04",
+          daysCount: 3,
+        },
+      })
+    );
+
+    expect(state.present[0]?.cards[0]?.schedule?.type).toBe("daily");
+
+    // 在 2026-10-04 完成
+    state = reducer(
+      state,
+      toggleTaskDateCompletion({
+        listId: "list-id-1",
+        cardId: "task-id-1",
+        dateKey: "2026-10-04",
+        done: true,
+      })
+    );
+
+    expect(
+      state.present[0]?.cards[0]?.completedDates?.["2026-10-04"]
+    ).toBe(true);
+    expect(
+      state.present[0]?.cards[0]?.completedDates?.["2026-10-05"]
+    ).toBeUndefined();
+
+    // 在 2026-10-04 取消完成
+    state = reducer(
+      state,
+      toggleTaskDateCompletion({
+        listId: "list-id-1",
+        cardId: "task-id-1",
+        dateKey: "2026-10-04",
+        done: false,
+      })
+    );
+    expect(
+      state.present[0]?.cards[0]?.completedDates?.["2026-10-04"]
+    ).toBeUndefined();
+  });
 });

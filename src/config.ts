@@ -4,28 +4,6 @@ import { TaskList, Config, Timer, Settings, Statistics } from "routes";
 export const APP_NAME = "Pomodoroz";
 export const APP_VERSION = __POMODOROZ_APP_VERSION__;
 
-export const SUPPORT_CONFIG = {
-  githubRepoUrl: "https://github.com/cjdduarte/pomodoroz",
-  // Troque para o seu link real do Stripe Payment Link.
-  stripePaymentUrl: "https://donate.stripe.com/bJe5kEg6acLrfvY3BvdMI00",
-  // Parametros opcionais adicionados ao link do Stripe.
-  stripePaymentParams: {
-    client_reference_id: "pomodoroz_settings",
-  },
-} as const;
-
-export const getStripeSupportUrl = () => {
-  try {
-    const url = new URL(SUPPORT_CONFIG.stripePaymentUrl);
-    Object.entries(SUPPORT_CONFIG.stripePaymentParams).forEach(
-      ([key, value]) => url.searchParams.set(key, value)
-    );
-    return url.toString();
-  } catch {
-    return SUPPORT_CONFIG.stripePaymentUrl;
-  }
-};
-
 type NavItemTypes = {
   name: string;
   icon: SVGTypes["name"];

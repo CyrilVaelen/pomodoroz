@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { isTauri } from "./environment";
 
 type PlayNotificationAudioOptions = {
   delayMs?: number;
@@ -57,6 +58,13 @@ export const playNotificationAudio = async (
   options?: PlayNotificationAudioOptions
 ) => {
   const delayMs = options?.delayMs ?? 0;
+
+  if (!isTauri()) {
+    if (typeof window !== "undefined") {
+      playWithHtmlAudio(source, delayMs);
+    }
+    return;
+  }
 
   try {
     await playWithTauriAudio(source, delayMs);

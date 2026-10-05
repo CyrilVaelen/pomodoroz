@@ -18,10 +18,37 @@ const buildCorruptBackupKey = (name: string): string => {
   return `${name}.corrupt.${timestamp}`;
 };
 
+const memoryFallback = new Map<string, string>();
+
+const getStorage = (): {
+  getItem: (k: string) => string | null;
+  setItem: (k: string, v: string) => void;
+  removeItem: (k: string) => void;
+} => {
+  if (typeof window !== "undefined" && window.localStorage) {
+    return window.localStorage;
+  }
+  const globalStorage = (
+    globalThis as unknown as { localStorage?: Storage }
+  ).localStorage;
+  if (globalStorage) {
+    return globalStorage;
+  }
+  return {
+    getItem: (k: string) => memoryFallback.get(k) ?? null,
+    setItem: (k: string, v: string) => {
+      memoryFallback.set(k, String(v));
+    },
+    removeItem: (k: string) => {
+      memoryFallback.delete(k);
+    },
+  };
+};
+
 export const saveToStorage = <T>(name: string, state: T): void => {
   try {
     const serializedState = JSON.stringify(state);
-    localStorage.setItem(name, serializedState);
+    getStorage().setItem(name, serializedState);
   } catch (error) {
     console.error(error);
   }
@@ -31,7 +58,7 @@ export const readFromStorage = <T = unknown>(
   name: string
 ): StorageReadResult<T> => {
   try {
-    const serializedState = localStorage.getItem(name);
+    const serializedState = getStorage().getItem(name);
     if (serializedState === null) {
       return { status: "missing" };
     }
@@ -41,7 +68,7 @@ export const readFromStorage = <T = unknown>(
       value: JSON.parse(serializedState) as T,
     };
   } catch (error) {
-    const rawValue = localStorage.getItem(name) ?? "";
+    const rawValue = getStorage().getItem(name) ?? "";
     corruptStorageReads.set(name, { error, rawValue });
     console.error(error);
     return { status: "corrupt", error, rawValue };

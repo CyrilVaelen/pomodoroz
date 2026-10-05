@@ -14,6 +14,8 @@
   "scripts": {
     "prepare": "husky .husky",
     "commit": "git-cz",
+    "dev:web": "node ./node_modules/vite/bin/vite.js --config app/renderer/vite.config.mts",
+    "preview:web": "node ./node_modules/vite/bin/vite.js preview --config app/renderer/vite.config.mts",
     "build:renderer": "node ./node_modules/vite/bin/vite.js build --config app/renderer/vite.config.mts",
     "typecheck:renderer": "node ./node_modules/typescript/bin/tsc --noEmit -p app/renderer/tsconfig.json",
     "build:tauri": "node ./scripts/pnpmw.mjs tauri build --no-bundle",
@@ -76,6 +78,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@emotion/is-prop-valid": "^1.4.0",
     "@reduxjs/toolkit": "^2.12.0",
+    "@supabase/supabase-js": "^2.49.1",
     "@tauri-apps/plugin-autostart": "2.5.1",
     "@tauri-apps/plugin-opener": "2.5.5",
     "@tauri-apps/plugin-os": "2.3.2",

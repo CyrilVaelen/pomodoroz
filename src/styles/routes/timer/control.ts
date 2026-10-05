@@ -53,7 +53,7 @@ export const StyledControl = styled.div<ControlProps>`
     (p.type === TimerStatus.SHORT_BREAK && "var(--color-green)") ||
     (p.type === TimerStatus.LONG_BREAK && "var(--color-yellow)") ||
     (p.type === TimerStatus.SPECIAL_BREAK && "var(--color-yellow)") ||
-    "var(--color-primary)"};
+    "var(--color-primary-text)"};
 
   .ripple-hook {
     background-color: ${(p) =>
@@ -106,7 +106,7 @@ export const StyledSessionReset = styled.button<SessionProps>`
         "var(--color-yellow)") ||
       (p.timerType === TimerStatus.SPECIAL_BREAK &&
         "var(--color-yellow)") ||
-      "var(--color-primary)"};
+      "var(--color-primary-text)"};
   }
 
   & > svg {
@@ -150,6 +150,20 @@ export const StyledControlMain = styled.div<{ compact?: boolean }>`
 
 export const StyledResetButton = styled.button`
   ${ControlButton};
+`;
+
+export const StyledSaveSessionButton = styled.button`
+  ${ControlButton};
+
+  & > svg {
+    width: 1.8rem;
+    height: 1.8rem;
+  }
+
+  &.compact > svg {
+    width: 1.6rem;
+    height: 1.6rem;
+  }
 `;
 
 export const StyledMainButton = styled.button`

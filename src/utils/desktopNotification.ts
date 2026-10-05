@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { isTauri } from "./environment";
 
 let tauriPermissionGrantedCache: boolean | null = null;
 let hasLoggedPendingPermission = false;
@@ -31,6 +32,13 @@ const updatePermissionCache = (permission: NotificationPermission) => {
 
 const readTauriNotificationPermission =
   async (): Promise<NotificationPermission> => {
+    if (!isTauri()) {
+      if (typeof window !== "undefined" && "Notification" in window) {
+        return Notification.permission;
+      }
+      return "denied";
+    }
+
     const permissionState = await invoke<null | boolean>(
       "plugin:notification|is_permission_granted"
     ).catch((error: unknown) => {
@@ -46,6 +54,17 @@ const readTauriNotificationPermission =
 
 const requestTauriNotificationPermission =
   async (): Promise<NotificationPermission> => {
+    if (!isTauri()) {
+      if (typeof window !== "undefined" && "Notification" in window) {
+        try {
+          return await Notification.requestPermission();
+        } catch {
+          return "denied";
+        }
+      }
+      return "denied";
+    }
+
     const permissionState = await invoke<string>(
       "plugin:notification|request_permission"
     ).catch((error: unknown) => {
@@ -63,6 +82,20 @@ const sendTauriNativeNotification = async (
   title: string,
   options: NotificationOptions
 ) => {
+  if (!isTauri()) {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      try {
+        new Notification(title, {
+          body: options.body,
+          icon: options.icon,
+        });
+      } catch (error) {
+        console.warn("[Web Notification] 发送通知失败:", error);
+      }
+    }
+    return;
+  }
+
   await invoke("plugin:notification|notify", {
     options: {
       title,
