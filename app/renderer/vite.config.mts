@@ -17,6 +17,7 @@ const packageJson = JSON.parse(
 export default defineConfig({
   root: RENDERER_ROOT_DIR,
   base: "./",
+  envPrefix: ["VITE_", "NEXT_PUBLIC_"],
   define: {
     __POMODOROZ_APP_VERSION__: JSON.stringify(
       packageJson.version ?? ""

@@ -286,7 +286,8 @@ class SyncEngine {
     userId: string,
     taskLists: TaskList[]
   ) {
-    const client = getSupabaseClient()!;
+    const client = getSupabaseClient();
+    if (!client) return;
 
     // 1. 整理列表数据
     const cloudLists: CloudTaskList[] = taskLists.map(
@@ -348,7 +349,8 @@ class SyncEngine {
     userId: string,
     settings: Partial<SettingTypes>
   ) {
-    const client = getSupabaseClient()!;
+    const client = getSupabaseClient();
+    if (!client) return;
     const { error } = await client.from("user_settings").upsert(
       {
         user_id: userId,
@@ -367,7 +369,8 @@ class SyncEngine {
     userId: string,
     session: StatisticsSessionRecord
   ) {
-    const client = getSupabaseClient()!;
+    const client = getSupabaseClient();
+    if (!client) return;
     const cloudSession: CloudFocusSession = {
       user_id: userId,
       session_id: session.id,

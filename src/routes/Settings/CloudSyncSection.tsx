@@ -207,14 +207,25 @@ export const CloudSyncSection: React.FC = () => {
   useEffect(() => {
     if (!configured) return;
 
-    getCurrentUser().then((u) => {
-      setUserEmail(u?.email || null);
-      if (u) {
-        syncEngine.initRealtime();
-      }
-    });
+    let mounted = true;
 
-    const { data } = onAuthStateChange((_event, session) => {
+    getCurrentUser()
+      .then((u) => {
+        if (!mounted) return;
+        setUserEmail(u?.email || null);
+        if (u) {
+          syncEngine.initRealtime();
+        }
+      })
+      .catch((err) => {
+        console.warn(
+          "Failed to retrieve current user in settings:",
+          err
+        );
+      });
+
+    const authRes = onAuthStateChange((_event, session) => {
+      if (!mounted) return;
       setUserEmail(session?.user?.email || null);
       if (session?.user) {
         syncEngine.initRealtime();
@@ -224,12 +235,14 @@ export const CloudSyncSection: React.FC = () => {
       }
     });
 
-    const unsubSync = syncEngine.subscribeStatus((st) =>
-      setSyncStatus(st)
-    );
+    const unsubSync = syncEngine.subscribeStatus((st) => {
+      if (!mounted) return;
+      setSyncStatus(st);
+    });
 
     return () => {
-      data.subscription.unsubscribe();
+      mounted = false;
+      authRes?.data?.subscription?.unsubscribe?.();
       unsubSync();
     };
   }, [configured]);
